@@ -1,0 +1,176 @@
+This module manages MySQL.  It gives you the choice MySQL
+server you want to use: Oracle, MariaDB or Percona
+
+Parameters, first one is the default:
+- type :   oracle|mariadb|percona
+- multi:   false|true
+- disable_service_restart: true|false
+
+Requires: camptocamp/apt
+
+Sample Usages:
+
+1) Install mariadb MySQL server:
+
+  class {
+    'mysql':
+      type => 'mariadb';
+  }
+
+2) Install Oracle MySQL that come with the Debian
+   repositories.  Setup multiple MySQL instance with
+   MySQLd_multi.
+
+  class {
+    'mysql':
+      multi => true;
+  }
+
+  mysql::multi::instance{
+    'mysqld1':
+      groupnr      => 1,
+      bind_address => '0.0.0.0',
+      port         => 3307;
+    'mysqld2':
+      groupnr      => 2,
+      bind_address => '0.0.0.0',
+      port         => 3308;
+    'mysqld3':
+      groupnr      => 3,
+      bind_address => '0.0.0.0',
+      port         => 3309,
+      ensure       => 'stopped';
+  }
+
+3) Install Oracle MySQL in standby mode. Standby mode prevents puppet:
+  - to put mysql in default runlevel
+  - to modify service's status (if mysql is stopped, puppet don't start it)
+  - to notify service on config files change
+
+  class { 'mysql':
+    disable_service_restart => true
+  }
+
+4) Change a setting in your MySQL configuration.
+
+  mysql::config::param {
+    'bind-address':
+      section => 'mysqld',
+      value   => '0.0.0.0';
+  }
+
+  mysql::config::param {
+    'bind-address1':
+      section => 'mysqld1',
+      param   => 'bind-address',
+      value   => '0.0.0.0';
+  }
+
+5) Create a database and users
+
+  mysql::functions::database {
+    'mydatabase':
+      ensure => 'present'
+  }
+
+  mysql::function::user {
+    'mydbuser':
+      ensure => 'present',
+      password => '*5A5DBAE1C258F3E8D037F02A6B16BE6570821C5B',
+      host => '%',
+      database => "mydatabase",
+      require => Mysql::Functions::Database['mydatabase']
+  }
+
+It is possible to create users using a plain password, just add 
+'plain_password => true' to the lost of options.
+
+mysql::function::user accepts the following options:
+
+- password : the user password, crypted or plaintext. (required).
+- database : the database to grant user for. Can be "*" for *.* (defaults to "*")
+- host     : the host from which the user can connect. Can be "%" for all hosts.
+  (defaults to "localhost")
+- ensure   : valid values "present" or "absent". (defaults to "present")
+- plain_password: boolean. If true consider $password as plaintext. (defaults
+  to false)
+- grant    : boolean. If true, add WITH GRANT OPTION to the user for the given 
+  database(s). (defaults to false)
+- privileges : an array of privileges or false. if false it means "ALL PRIVILEGES",
+  otherwise. (defaults to false)
+
+6) Grant privileges to an existing user.
+
+  mysql::functions::grant {
+    "myuser":
+      privileges => ["SELECT"],
+      database => "mysql",
+  }
+
+mysql::functions::grant accepts the following parameters:
+
+- database : the database to grant user for. Can be "*" for *.* (defaults to "*")
+- host     : the host from which the user can connect. Can be "%" for all hosts.
+- privileges : an array of privileges (required)
+- ensure   : valid values "present" or "absent". (defaults to "present")
+
+
+7) Add a parameter file in the mysql conf.d directory.
+
+  $params = {
+    "join_buffer_size" => "1M",
+    "innodb_file_per_table" => true,
+    "thread_stack" => "192K"
+  }
+
+  mysql::config::paramfile{"myparamfilename":
+    section => "mysqld"
+    params => $params
+  }
+
+Parameters are defined inside an hash. If the value is true, it will simply
+print the parameter name into the file, without the =.
+i.e. the above example result in a file named myparamfilename.cfg inside
+mysql conf.d dir with the following content:
+
+  join_buffer_size = 1M
+  innodb_file_per_table
+  thread_stack = 192K
+
+
+8) Add monitoring support
+
+You can configure the mysql server to support monitoring via nrpe using 
+the mysql::monitoring class. This class can be added on a node to check a remote
+mysql server, i.e. when the server is in a private subnet and it is to be
+monitored from a frontend node.
+
+  $checks = {
+    qcache-hitrate => {warning => "50:", critical => "60:"},
+    qcache-lowmem-prunes => false,
+    index-usage => {critical => "0:"}
+  }
+
+  class { "mysql::monitoring":
+    user_checks => checks,
+    password => "myclearpassword"
+  }
+
+Password is a cleartext password.
+mysql::monitoring accepts the following parameters:
+
+- user_checks : a dictionary containing a check => value map to override defaults.
+  defaults can be check in the manifests/monitoring.pp file.
+  For a list the available checks, consult the help of the check_mysql_health
+  script.
+  values can be either:
+    * {}                : add the check, but do not set thresholds
+    * false/nil         : do not add the check, even if listed in the defaults
+    * {warning => nil,
+      critical => 60:} : add the threshold if not nil/false
+  user_checks defaults to an empty hash (i.e. {})
+
+- user        : mysql user. Defaults to "monitoring"
+- password    : mysql password for the user, in cleartext.
+- host        : mysql hostname to connect to. Defaults to "localhost"
+- port        : mysql port. Defaults to "3306"
