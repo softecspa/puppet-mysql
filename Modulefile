@@ -8,4 +8,4 @@ description 'UNKNOWN'
 project_page 'UNKNOWN'
 
 ## Add dependencies, if any:
-dependency 'softecspa/apt', '> 0', 'https://github.com/softecspa/puppet-apt.git'
+dependency 'softecspa/apt', '>= 0', 'https://github.com/softecspa/puppet-apt.git'
