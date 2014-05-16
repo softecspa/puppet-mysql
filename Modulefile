@@ -1,6 +1,6 @@
 name    'puppet-mysql'
 version '0.0.1'
-source 'https://github.com/softecspa/puppet-mysql'
+source 'https://github.com/softecspa/puppet-mysql.git'
 author 'softecspa'
 license 'GPL v3 or later'
 summary 'Manage your percona, mariadb or oracle MySQL'
