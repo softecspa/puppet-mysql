@@ -74,6 +74,7 @@
 #
 class mysql (
   $type='oracle',
+  $version = '',
   $multi=false,
   $disable_service_restart = false,
   $notification_mail = 'notifiche@softecspa.it',
@@ -161,6 +162,7 @@ class mysql (
 
   class {"mysql::params":
     disable_service_restart => $disable_service_restart,
+    version                 => $version,
   }
   include mysql::repo
   include mysql::install

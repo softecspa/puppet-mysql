@@ -1,14 +1,25 @@
 class mysql::params ($disable_service_restart)
 {
-  $packages = $mysql::type ? {
-    'oracle'  =>
-      $lsbdistcodename ? {
-        "hardy"   => [ 'mysql-server-5.0' ],
-        "lucid"   => [ 'mysql-server-5.1' ],
-        "precise" => [ 'mysql-server-5.5' ],
-      },
-    'percona' => [ 'percona-server-server-5.5' ],
-    'mariadb' => [ 'mariadb-server-5.3' ],
+
+  case $mysql::type {
+    'oracle':   {
+      if $version == '' {
+        $packages = $::lsbdistcodename ? {
+          "hardy"   => [ 'mysql-server-5.0' ],
+          "lucid"   => [ 'mysql-server-5.1' ],
+          "precise" => [ 'mysql-server-5.5' ],
+        }
+      }
+      else {
+        $packages = [ $version ]
+      }
+    }
+    'percona':  {
+      $packages = [ 'percona-server-server-5.5' ]
+    }
+    'mariadb':  {
+      $packages = [ 'mariadb-server-5.3' ]
+    }
   }
 
   $packages_extra = $mysql::type ? {
