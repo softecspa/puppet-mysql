@@ -1,4 +1,7 @@
-class mysql::params ($disable_service_restart)
+class mysql::params (
+  $disable_service_restart,
+  $version,
+)
 {
 
   case $mysql::type {
