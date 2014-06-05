@@ -13,6 +13,7 @@ class mysql::config
       mode    => 755;
     "/var/lib/mysql":
       ensure  => $mysql::params::ensure_datadir,
+      target  => $mysql::params::datadir_target,
       owner   => mysql,
       group   => mysql,
       mode    => 755;

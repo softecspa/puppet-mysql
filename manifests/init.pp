@@ -104,6 +104,7 @@ class mysql (
   $replicate_ignore_db = '',
 
   $data_dir = '',
+  $data_dir_target = '',
   $log_bin = '',
   $log_bin_index = '',
   $log_error = '',
@@ -126,6 +127,12 @@ class mysql (
 
   if $data_dir!='' {
     validate_absolute_path($data_dir)
+  }
+  if $data_dir_target != '' {
+    validate_absolute_path($data_dir_target)
+    if $data_dir == '' {
+      fail('if you specify data_dir_target, data_dir must be specified. It will be a symlink to data_dir_target')
+    }
   }
   if $log_bin!='' {
     validate_absolute_path($log_bin)

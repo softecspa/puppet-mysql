@@ -57,13 +57,21 @@ class mysql::params (
     $ensure_service = undef
     $enable_service = false
     $ensure_datadir = undef
+    $datadir_target = undef
     $ensure_confdir = undef
   }
   else {
     $notify_service = true
     $ensure_service = true
     $enable_service = true
-    $ensure_datadir = directory
+    $ensure_datadir = $mysql::data_dir_target ?{
+      ''      => directory,
+      default => link
+    }
+    $datadir_target = $mysql::data_dir_target?{
+      ''      => undef,
+      default => $mysql::data_dir_target
+    }
     $ensure_confdir = directory
   }
 
