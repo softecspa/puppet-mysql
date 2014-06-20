@@ -167,6 +167,10 @@ class mysql (
     fail("error: value $type in variable \$type not allowed. It should be: [oracle|mariadb|percona]")
   }
 
+  if !defined(Package['pwgen']) {
+    fail('package pwgen is required')
+  }
+
   class {"mysql::params":
     disable_service_restart => $disable_service_restart,
     version                 => $version,
